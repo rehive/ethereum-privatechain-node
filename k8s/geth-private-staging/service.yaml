@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ethereum-service-staging
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth-service-private
+  namespace: ethereum-service-staging
+spec:
+  ports:
+  - port: 8545
+    targetPort: 8545
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: geth-private-network
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: geth-private-network
+  namespace: ethereum-service-staging
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ethereum-service-staging
+    spec:
+      containers:
+      - image: gcr.io/rehive-services/geth-private-node:latest
+        imagePullPolicy: Always
+        name: geth-service-private
+        ports:
+        - containerPort: 8545
+        command: ["/bin/sh","-c"]
+        args: ["geth -dev -rpc & gethdev --ipcpath /tmp/ethereum_dev_mode/geth.ipc --datadir /tmp/ethereum_dev_mode/geth/chaindata js /usr/gethdev.js"]
